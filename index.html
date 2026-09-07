@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factor Visualizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #8b5cf6;
+            --primary-dark: #7c3aed;
+            --primary-light: #ddd6fe;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.15);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #c026d3 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: var(--text-primary);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Header Section */
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 15px;
+            letter-spacing: -1px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 300;
+        }
+
+        /* Main Card */
+        .main-card {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            padding: 40px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .control-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: white;
+            color: var(--text-primary);
+        }
+
+        select:hover, input[type="number"]:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        select:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 32px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            flex: 1;
+            min-width: 140px;
+        }
+
+        #btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        #btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        #btn:active {
+            transform: translateY(0);
+        }
+
+        #clearBtn {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        #clearBtn:hover {
+            background: #cbd5e1;
+        }
+
+        /* Results Section */
+        .results-section {
+            padding: 40px;
+        }
+
+        #resultText {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--primary-light);
+            border-left: 4px solid var(--primary);
+            border-radius: 10px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            opacity: 0;
+            animation: slideInLeft 0.5s ease-out forwards;
+        }
+
+        #resultText.error {
+            background: var(--danger-light);
+            border-left-color: var(--danger);
+            color: var(--danger);
+        }
+
+        #resultText.hidden {
+            display: none;
+        }
+
+        /* Grid Container for All Factors & Pairs */
+        .grid-container {
+            display: flex;
+            flex-direction: column;
+            gap: 35px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .factors-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .pairs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        /* Factor & Pair Cards */
+        .factor-card {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            border: 2px solid var(--border-color);
+            background: white;
+            color: var(--text-primary);
+            box-shadow: var(--shadow-sm);
+            animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            opacity: 0;
+            transform: scale(0);
+            position: relative;
+        }
+
+        .factor-card.prime-factor {
+            border-color: var(--success);
+            background: var(--success-light);
+            color: #065f46;
+        }
+
+        .factor-card.prime-factor::after {
+            content: '★';
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: var(--success);
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+        }
+
+        .pair-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 15px;
+            background: #f8fafc;
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            opacity: 0;
+            transform: scale(0);
+        }
+
+        .pair-card span.highlight {
+            color: var(--primary-dark);
+            background: var(--primary-light);
+            padding: 4px 10px;
+            border-radius: 8px;
+        }
+
+        @keyframes popIn {
+            0% {
+                opacity: 0;
+                transform: scale(0);
+            }
+            70% {
+                transform: scale(1.1);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Stats Footer */
+        .stats-footer {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 25px 40px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            text-align: center;
+        }
+
+        .stat-item h3 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-item .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            .control-panel {
+                padding: 25px;
+            }
+
+            .control-group {
+                flex-direction: column;
+            }
+
+            .form-group {
+                width: 100%;
+            }
+
+            .button-group {
+                width: 100%;
+            }
+
+            button {
+                min-width: unset;
+                width: 100%;
+            }
+
+            .pairs-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+
+            .stats-footer {
+                padding: 20px;
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+            width: 100%;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <h1 id="title">All Factors Calculator</h1>
+        <p id="subtitle">Find all divisors and factor pairs of any number</p>
+    </div>
+
+    <!-- Main Card -->
+    <div class="main-card">
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="control-group">
+                <div class="form-group">
+                    <label for="langSelect" id="langLabel">Language</label>
+                    <select id="langSelect" onchange="changeLanguage()">
+                        <option value="ka">ქართული (Georgian)</option>
+                        <option value="en" selected>English</option>
+                        <option value="es">Español (Spanish)</option>
+                        <option value="fr">Français (French)</option>
+                        <option value="de">Deutsch (German)</option>
+                        <option value="it">Italiano (Italian)</option>
+                        <option value="pt">Português (Portuguese)</option>
+                        <option value="nl">Nederlands (Dutch)</option>
+                        <option value="pl">Polski (Polish)</option>
+                        <option value="ru">Русский (Russian)</option>
+                        <option value="uk">Українська (Ukrainian)</option>
+                        <option value="tr">Türkçe (Turkish)</option>
+                        <option value="az">Azərbaycan (Azerbaijani)</option>
+                        <option value="hy">Հայերեն (Armenian)</option>
+                        <option value="el">Ελληνικά (Greek)</option>
+                        <option value="zh">中文 (Chinese)</option>
+                        <option value="ja">日本語 (Japanese)</option>
+                        <option value="ko">한국어 (Korean)</option>
+                        <option value="ar">العربية (Arabic)</option>
+                        <option value="hi">हिन्दी (Hindi)</option>
+                        <option value="bn">বাংলা (Bengali)</option>
+                        <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+                        <option value="jv">Jawa (Javanese)</option>
+                        <option value="ms">Bahasa Melayu (Malay)</option>
+                        <option value="vi">Tiếng Việt (Vietnamese)</option>
+                        <option value="th">ไทย (Thai)</option>
+                        <option value="fa">فارسی (Persian)</option>
+                        <option value="ro">Română (Romanian)</option>
+                        <option value="hu">Magyar (Hungarian)</option>
+                        <option value="cs">Čeština (Czech)</option>
+                        <option value="sk">Slovenčina (Slovak)</option>
+                        <option value="bg">Български (Bulgarian)</option>
+                        <option value="sr">Српски (Serbian)</option>
+                        <option value="hr">Hrvatski (Croatian)</option>
+                        <option value="sv">Svenska (Swedish)</option>
+                        <option value="da">Dansk (Danish)</option>
+                        <option value="fi">Suomi (Finnish)</option>
+                        <option value="no">Norsk (Norwegian)</option>
+                        <option value="he">עברית (Hebrew)</option>
+                        <option value="id">Bahasa Indonesia (Indonesian)</option>
+                        <option value="fil">Filipino (Tagalog)</option>
+                        <option value="sw">Kiswahili (Swahili)</option>
+                        <option value="ur">اردو (Urdu)</option>
+                        <option value="te">తెలుగు (Telugu)</option>
+                        <option value="mr">मराठी (Marathi)</option>
+                        <option value="ta">தமிழ் (Tamil)</option>
+                        <option value="gu">ગુજરાતી (Gujarati)</option>
+                        <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                        <option value="ml">മലയാളം (Malayalam)</option>
+                        <option value="eu">Euskara (Basque)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="numInput" id="inputLabel">Enter a number</label>
+                    <input type="number" id="numInput" min="1" value="88">
+                </div>
+
+                <div class="button-group">
+                    <button id="btn" onclick="calculate()">Calculate</button>
+                    <button id="clearBtn" onclick="clearCalculation()">Clear</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section">
+            <div id="resultText" class="hidden"></div>
+            <div id="displayContainer">
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔢</div>
+                    <p id="emptyMsg">Enter a positive number and click Calculate to see all factors</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Footer -->
+        <div class="stats-footer">
+            <div class="stat-item">
+                <h3 id="stat1-label">Input Number</h3>
+                <div class="value" id="stat1">—</div>
+            </div>
+            <div class="stat-item">
+                <h3 id="stat2-label">Total Factors</h3>
+                <div class="value" id="stat2">—</div>
+            </div>
+            <div class="stat-item">
+                <h3 id="stat3-label">Prime Factors</h3>
+                <div class="value" id="stat3">—</div>
+            </div>
+            <div class="stat-item">
+                <h3 id="stat4-label">Factor Sum</h3>
+                <div class="value" id="stat4">—</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const translations = {
+    ka: { 
+        title: "ყველა გამყოფის/მამრავლის გამოთვლა", 
+        subtitle: "იპოვეთ ნებისმიერი რიცხვის ყველა გამყოფი და მამრავლთა წყვილები",
+        placeholder: "შეიყვანეთ მთელი რიცხვი > 0", 
+        btn: "გამოთვლა", 
+        clear: "გასუფთავება",
+        invalid: "გთხოვთ შეიყვანოთ 0-ზე მეტი მთელი რიცხვი.", 
+        res: "ყველა გამყოფი",
+        allFactorsTitle: "ყველა გამყოფი (★ აღნიშნავს მარტივ გამყოფს)",
+        pairsTitle: "მამრავლთა წყვილები",
+        language: "ენა",
+        inputLabel: "შეიყვანეთ რიცხვი",
+        emptyMsg: "შეიყვანეთ დადებითი რიცხვი და დააჭირეთ გამოთვლას გამყოფების სანახავად",
+        stat1: "შეტანილი რიცხვი",
+        stat2: "გამყოფების რაოდენობა",
+        stat3: "მარტივი გამყოფები",
+        stat4: "გამყოფების ჯამი"
+    },
+    en: { 
+        title: "All Factors Calculator", 
+        subtitle: "Find all divisors and factor pairs of any number",
+        placeholder: "Enter an integer > 0", 
+        btn: "Calculate", 
+        clear: "Clear",
+        invalid: "Please enter an integer greater than 0.", 
+        res: "All Factors",
+        allFactorsTitle: "All Divisors (★ indicates prime factor)",
+        pairsTitle: "Factor Pairs",
+        language: "Language",
+        inputLabel: "Enter a number",
+        emptyMsg: "Enter a positive number and click Calculate to see all factors",
+        stat1: "Input Number",
+        stat2: "Total Factors",
+        stat3: "Prime Factors",
+        stat4: "Factor Sum"
+    },
+    es: { 
+        title: "Calculadora de Todos los Factores", 
+        subtitle: "Encuentra todos los divisores y parejas de factores de cualquier número",
+        placeholder: "Ingrese un entero > 0", 
+        btn: "Calcular", 
+        clear: "Limpiar",
+        invalid: "Ingrese un número entero mayor que 0.", 
+        res: "Todos los Factores",
+        allFactorsTitle: "Todos los Divisores (★ indica factor primo)",
+        pairsTitle: "Pares de Factores",
+        language: "Idioma",
+        inputLabel: "Ingrese un número",
+        emptyMsg: "Ingrese un número positivo y haga clic en Calcular para ver todos los factores",
+        stat1: "Número de entrada",
+        stat2: "Total de factores",
+        stat3: "Factores primos",
+        stat4: "Suma de factores"
+    },
+    fr: { 
+        title: "Calculateur de Tous les Facteurs", 
+        subtitle: "Trouvez tous les diviseurs et paires de facteurs de n'importe quel nombre",
+        placeholder: "Entrez un entier > 0", 
+        btn: "Calculer", 
+        clear: "Effacer",
+        invalid: "Veuillez entrer un entier supérieur à 0.", 
+        res: "Tous les Facteurs",
+        allFactorsTitle: "Tous les Diviseurs (★ indique un facteur premier)",
+        pairsTitle: "Paires de Facteurs",
+        language: "Langue",
+        inputLabel: "Entrez un nombre",
+        emptyMsg: "Entrez un nombre positif et cliquez sur Calculer pour voir tous les facteurs",
+        stat1: "Nombre saisi",
+        stat2: "Total des facteurs",
+        stat3: "Facteurs premiers",
+        stat4: "Somme des facteurs"
+    },
+    de: { 
+        title: "Rechner für Alle Faktoren", 
+        subtitle: "Finden Sie alle Teiler und Faktorpaare einer beliebigen Zahl",
+        placeholder: "Ganzzahl > 0 eingeben", 
+        btn: "Berechnen", 
+        clear: "Löschen",
+        invalid: "Bitte geben Sie eine Ganzzahl größer als 0 ein.", 
+        res: "Alle Faktoren",
+        allFactorsTitle: "Alle Teiler (★ kennzeichnet Primfaktor)",
+        pairsTitle: "Faktorpaare",
+        language: "Sprache",
+        inputLabel: "Zahl eingeben",
+        emptyMsg: "Geben Sie eine positive Zahl ein und klicken Sie auf Berechnen",
+        stat1: "Eingabezahl",
+        stat2: "Gesamte Faktoren",
+        stat3: "Primfaktoren",
+        stat4: "Summe der Faktoren"
+    },
+    it: { 
+        title: "Calcolatore di Tutti i Fattori", 
+        subtitle: "Trova tutti i divisori e le coppie di fattori di qualsiasi numero",
+        placeholder: "Inserisci un intero > 0", 
+        btn: "Calcola", 
+        clear: "Cancella",
+        invalid: "Inserisci un numero intero maggiore di 0.", 
+        res: "Tutti i Fattori",
+        allFactorsTitle: "Tutti i Divisori (★ indica fattore primo)",
+        pairsTitle: "Coppie di Fattori",
+        language: "Lingua",
+        inputLabel: "Inserisci un numero",
+        emptyMsg: "Inserisci un numero positivo e fai clic su Calcola",
+        stat1: "Numero di ingresso",
+        stat2: "Fattori totali",
+        stat3: "Fattori primi",
+        stat4: "Somma dei fattori"
+    },
+    pt: { 
+        title: "Calculadora de Todos os Fatores", 
+        subtitle: "Encontre todos os divisores e pares de fatores de qualquer número",
+        placeholder: "Insira um número inteiro > 0", 
+        btn: "Calcular", 
+        clear: "Limpar",
+        invalid: "Insira um número inteiro maior que 0.", 
+        res: "Todos os Fatores",
+        allFactorsTitle: "Todos os Divisores (★ indica fator primo)",
+        pairsTitle: "Pares de Fatores",
+        language: "Idioma",
+        inputLabel: "Insira um número",
+        emptyMsg: "Insira um número positivo e clique em Calcular",
+        stat1: "Número de entrada",
+        stat2: "Total de fatores",
+        stat3: "Fatores primos",
+        stat4: "Soma dos fatores"
+    },
+    nl: { 
+        title: "Alle Factoren Rekenmachine", 
+        subtitle: "Vind alle delers en factorparen van elk getal",
+        placeholder: "Voer een geheel getal in > 0", 
+        btn: "Berekenen", 
+        clear: "Wissen",
+        invalid: "Voer een geheel getal in groter dan 0.", 
+        res: "Alle Factoren",
+        allFactorsTitle: "Alle Delers (★ geeft priemfactor aan)",
+        pairsTitle: "Factorparen",
+        language: "Taal",
+        inputLabel: "Voer een getal in",
+        emptyMsg: "Voer een positief getal in en klik op Berekenen",
+        stat1: "Invoernummer",
+        stat2: "Totaal aantal factoren",
+        stat3: "Priemfactoren",
+        stat4: "Som van factoren"
+    },
+    pl: { 
+        title: "Kalkulator Wszystkich Dzielników", 
+        subtitle: "Znajdź wszystkie dzielniki i pary czynników dowolnej liczby",
+        placeholder: "Wpisz liczbę całkowitą > 0", 
+        btn: "Oblicz", 
+        clear: "Wyczyść",
+        invalid: "Wpisz liczbę całkowitą większą niż 0.", 
+        res: "Wszystkie Dzielniki",
+        allFactorsTitle: "Wszystkie Dzielniki (★ oznacza czynnik pierwszy)",
+        pairsTitle: "Pary Czynników",
+        language: "Język",
+        inputLabel: "Wpisz liczbę",
+        emptyMsg: "Wpisz dodatnią liczbę i kliknij Oblicz",
+        stat1: "Liczba wejściowa",
+        stat2: "Liczba dzielników",
+        stat3: "Czynniki pierwsze",
+        stat4: "Suma dzielników"
+    },
+    ru: { 
+        title: "Калькулятор всех делителей", 
+        subtitle: "Найдите все делители и пары множителей любого числа",
+        placeholder: "Введите целое число > 0", 
+        btn: "Рассчитать", 
+        clear: "Очистить",
+        invalid: "Пожалуйста, введите целое число больше 0.", 
+        res: "Все делители",
+        allFactorsTitle: "Все делители (★ обозначает простой делитель)",
+        pairsTitle: "Пары множителей",
+        language: "Язык",
+        inputLabel: "Введите число",
+        emptyMsg: "Введите положительное число и нажмите Рассчитать",
+        stat1: "Входное число",
+        stat2: "Всего делителей",
+        stat3: "Простые делители",
+        stat4: "Сумма делителей"
+    },
+    uk: { 
+        title: "Калькулятор усіх дільників", 
+        subtitle: "Знайдіть усі дільники та пари множників будь-якого числа",
+        placeholder: "Введіть ціле число > 0", 
+        btn: "Обчислити", 
+        clear: "Очистити",
+        invalid: "Будь ласка, введіть ціле число більше 0.", 
+        res: "Усі дільники",
+        allFactorsTitle: "Усі дільники (★ позначає простий дільник)",
+        pairsTitle: "Пари множників",
+        language: "Мова",
+        inputLabel: "Введіть число",
+        emptyMsg: "Введіть додатне число і натисніть Обчислити",
+        stat1: "Вхідне число",
+        stat2: "Усього дільників",
+        stat3: "Прості дільники",
+        stat4: "Сума дільників"
+    },
+    tr: { 
+        title: "Tüm Çarpanlar Hesaplayıcı", 
+        subtitle: "Herhangi bir sayının tüm bölenlerini ve çarpan çiftlerini bulun",
+        placeholder: "0'dan büyük bir tam sayı girin", 
+        btn: "Hesapla", 
+        clear: "Temizle",
+        invalid: "Lütfen 0'dan büyük bir tam sayı girin.", 
+        res: "Tüm Çarpanlar",
+        allFactorsTitle: "Tüm Bölenler (★ asal çarpanı gösterir)",
+        pairsTitle: "Çarpan Çiftleri",
+        language: "Dil",
+        inputLabel: "Bir sayı girin",
+        emptyMsg: "Pozitif bir sayı girin ve Hesapla'ya tıklayın",
+        stat1: "Giriş Sayısı",
+        stat2: "Toplam Çarpanlar",
+        stat3: "Asal Çarpanlar",
+        stat4: "Çarpan Toplamı"
+    },
+    az: { 
+        title: "Bütün Bölənlər Kalkulyatoru", 
+        subtitle: "Hər hansı bir ədədin bütün bölənlərini və vuruq cütlərini tapın",
+        placeholder: "0-dan böyük tam ədəd daxil edin", 
+        btn: "Hesabla", 
+        clear: "Təmizlə",
+        invalid: "Lütfən 0-dan böyük tam ədəd daxil edin.", 
+        res: "Bütün Bölənlər",
+        allFactorsTitle: "Bütün Bölənlər (★ sadə vuruğu göstərir)",
+        pairsTitle: "Vuruq Cütləri",
+        language: "Dil",
+        inputLabel: "Ədəd daxil edin",
+        emptyMsg: "Müsbət ədəd daxil edin və Hesabla düyməsini sıxın",
+        stat1: "Giriş nömrəsi",
+        stat2: "Ümumi bölənlər",
+        stat3: "Sadə bölənlər",
+        stat4: "Bölənlərin cəmi"
+    },
+    hy: { 
+        title: "Բոլոր Բաժանարարների Հաշվիչ", 
+        subtitle: "Գտեք ցանկացած թվի բոլոր բաժանարարները և արտադրիչների զույգերը",
+        placeholder: "Մուտքագրեք 0-ից մեծ ամբողջ թիվ", 
+        btn: "Հաշվել", 
+        clear: "Մաքրել",
+        invalid: "Խնդրում ենք մուտքագրել 0-ից մեծ ամբողջ թիվ:", 
+        res: "Բոլոր բաժանարարները",
+        allFactorsTitle: "Բոլոր բաժանարարները (★ ցույց է տալիս պարզ բաժանարարը)",
+        pairsTitle: "Արտադրիչների զույգեր",
+        language: "Լեզու",
+        inputLabel: "Մուտքագրեք թիվ",
+        emptyMsg: "Մուտքագրեք դրական թիվ և կտտացրեք Հաշվել",
+        stat1: "Մուտքային թիվ",
+        stat2: "Ընդհանուր բաժանարարներ",
+        stat3: "Պարզ բաժանարարներ",
+        stat4: "Բաժանարարների գումար"
+    },
+    el: { 
+        title: "Υπολογιστής Όλων των Παραγόντων", 
+        subtitle: "Βρείτε όλους τους διαιρέτες και τα ζεύγη παραγόντων οποιουδήποτε αριθμού",
+        placeholder: "Εισαγάγετε ακέραιο > 0", 
+        btn: "Υπολογισμός", 
+        clear: "Διαγραφή",
+        invalid: "Εισαγάγετε έναν ακέραιο μεγαλύτερο από 0.", 
+        res: "Όλοι οι Παράγοντες",
+        allFactorsTitle: "Όλοι οι Διαιρέτες (το ★ υποδεικνύει πρώτο παράγοντα)",
+        pairsTitle: "Ζεύγη Παραγόντων",
+        language: "Γλώσσα",
+        inputLabel: "Εισαγάγετε αριθμό",
+        emptyMsg: "Εισαγάγετε έναν θετικό αριθμό και κάντε κλικ στο Υπολογισμός",
+        stat1: "Αριθμός εισόδου",
+        stat2: "Συνολικοί παράγοντες",
+        stat3: "Πρώτοι παράγοντες",
+        stat4: "Άθροισμα παραγόντων"
+    },
+    zh: { 
+        title: "所有因数计算器", 
+        subtitle: "查找任何数字的所有因数和因数对",
+        placeholder: "输入大于 0 的整数", 
+        btn: "计算", 
+        clear: "清除",
+        invalid: "请输入大于 0 的整数。", 
+        res: "所有因数",
+        allFactorsTitle: "所有因数（★ 表示质因数）",
+        pairsTitle: "因数对",
+        language: "语言",
+        inputLabel: "输入数字",
+        emptyMsg: "输入正整数并点击计算",
+        stat1: "输入数字",
+        stat2: "因数总数",
+        stat3: "质因数个数",
+        stat4: "因数之和"
+    },
+    ja: { 
+        title: "全因数/約数計算機", 
+        subtitle: "任意の数のすべての約数と因数のペアを見つけます",
+        placeholder: "0より大きい整数を入力", 
+        btn: "計算", 
+        clear: "クリア",
+        invalid: "0より大きい整数を入力してください。", 
+        res: "すべての約数",
+        allFactorsTitle: "すべての約数（★は素因数を示します）",
+        pairsTitle: "因数のペア",
+        language: "言語",
+        inputLabel: " 숫자를 입력하세요",
+        emptyMsg: "正の数を入力して[計算]をクリックしてください",
+        stat1: "入力番号",
+        stat2: "約数の総数",
+        stat3: "素因数",
+        stat4: "約数の和"
+    },
+    ko: { 
+        title: "모든 약수 계산기", 
+        subtitle: "임의의 수의 모든 약수와 인수 쌍을 찾습니다",
+        placeholder: "0보다 큰 정수 입력", 
+        btn: "계산", 
+        clear: "지우기",
+        invalid: "0보다 큰 정수를 입력하세요.", 
+        res: "모든 약수",
+        allFactorsTitle: "모든 약수 (★는 소인수 표시)",
+        pairsTitle: "인수 쌍",
+        language: "언어",
+        inputLabel: "숫자 입력",
+        emptyMsg: "양수를 입력하고 계산을 클릭하세요",
+        stat1: "입력 번호",
+        stat2: "총 약수 수",
+        stat3: "소인수 수",
+        stat4: "약수의 합"
+    },
+    ar: { 
+        title: "حاسبة جميع العوامل والقواسم", 
+        subtitle: "أوجد جميع القواسم وأزواج العوامل لأي رقم",
+        placeholder: "أدخل عددًا صحيحًا > 0", 
+        btn: "احسب", 
+        clear: "امسح",
+        invalid: "الرجاء إدخال عدد صحيح أكبر من 0.", 
+        res: "جميع القواسم",
+        allFactorsTitle: "جميع القواسم (يشير ★ إلى عامل أولي)",
+        pairsTitle: "أزواج العوامل",
+        language: "اللغة",
+        inputLabel: "أدخل رقمًا",
+        emptyMsg: "أدخل رقمًا موجبًا وانقر على احسب",
+        stat1: "رقم الإدخال",
+        stat2: "إجمالي العوامل",
+        stat3: "العوامل الأولية",
+        stat4: "مجموع العوامل"
+    },
+    hi: { 
+        title: "सभी गुणनखंड कैलकुलेटर", 
+        subtitle: "किसी भी संख्या के सभी भाजक और गुणनखंड जोड़े खोजें",
+        placeholder: "0 से बड़ा पूर्णांक दर्ज करें", 
+        btn: "गणना करें", 
+        clear: "साफ़ करें",
+        invalid: "कृपया 0 से बड़ा पूर्णांक दर्ज करें।", 
+        res: "सभी गुणनखंड",
+        allFactorsTitle: "सभी भाजक (★ अभाज्य गुणनखंड दर्शाता है)",
+        pairsTitle: "गुणनखंड जोड़े",
+        language: "भाषा",
+        inputLabel: "एक संख्या दर्ज करें",
+        emptyMsg: "एक धनात्मक संख्या दर्ज करें और गणना करें पर क्लिक करें",
+        stat1: "इनपुट संख्या",
+        stat2: "कुल गुणनखंड",
+        stat3: "अभाज्य गुणनखंड",
+        stat4: "गुणनखंडों का योग"
+    },
+    bn: { 
+        title: "সমস্ত গুণনীয়ক ক্যালকুলেটর", 
+        subtitle: "যে কোনো সংখ্যার সমস্ত ভাজক এবং গুণনীয়ক জোড়া খুঁজুন",
+        placeholder: "০ এর চেয়ে বড় পূর্ণসংখ্যা দিন", 
+        btn: "গণনা করুন", 
+        clear: "মুছে ফেলুন",
+        invalid: "দয়া করে ০ এর চেয়ে বড় একটি পূর্ণসংখ্যা লিখুন।", 
+        res: "সমস্ত গুণনীয়ক",
+        allFactorsTitle: "সমস্ত ভাজক (★ মৌলিক গুণনীয়ক নির্দেশ করে)",
+        pairsTitle: "গুণনীয়ক জোড়া",
+        language: "ভাষা",
+        inputLabel: "একটি সংখ্যা লিখুন",
+        emptyMsg: "একটি ধনাত্মক সংখ্যা লিখুন এবং হিসাব করতে গণনা করুন-এ ক্লিক করুন",
+        stat1: "ইনপুট সংখ্যা",
+        stat2: "মোট গুণনীয়ক",
+        stat3: "মৌলিক গুণনীয়ক",
+        stat4: "গুণনীয়ক সমষ্টি"
+    },
+    pa: { 
+        title: "ਸਾਰੇ ਗੁਣਨਖੰਡ ਕੈਲਕੁਲੇਟਰ", 
+        subtitle: "ਕਿਸੇ ਵੀ ਸੰਖਿਆ ਦੇ ਸਾਰੇ ਭਾਜਕ ਅਤੇ ਗੁਣਨਖੰਡ ਜੋੜੇ ਲੱਭੋ",
+        placeholder: "0 ਤੋਂ ਵੱਡੀ ਪੂਰਨ ਸੰਖਿਆ ਦਰਜ ਕਰੋ", 
+        btn: "ਗਣਨਾ ਕਰੋ", 
+        clear: "ਸਾਫ਼ ਕਰੋ",
+        invalid: "ਕਿਰਪਾ ਕਰਕੇ 0 ਤੋਂ ਵੱਡੀ ਪੂਰਨ ਸੰਖਿਆ ਦਰਜ ਕਰੋ।", 
+        res: "ਸਾਰੇ ਗੁਣਨਖੰਡ",
+        allFactorsTitle: "ਸਾਰੇ ਭਾਜਕ (★ ਅਭਾਜ ਗੁਣਨਖੰਡ ਦਰਸਾਉਂਦਾ ਹੈ)",
+        pairsTitle: "ਗੁਣਨਖੰਡ ਜੋੜੇ",
+        language: "ਭਾਸ਼ਾ",
+        inputLabel: "ਇੱਕ ਸੰਖਿਆ ਦਰਜ ਕਰੋ",
+        emptyMsg: "ਇੱਕ ਧਨਾਤਮਕ ਸੰਖਿਆ ਦਰਜ ਕਰੋ ਅਤੇ ਗਣਨਾ ਕਰੋ 'ਤੇ ਕਲਿੱਕ ਕਰੋ",
+        stat1: "ਇਨਪੁਟ ਸੰਖਿਆ",
+        stat2: "ਕੁੱਲ ਗੁਣਨਖੰਡ",
+        stat3: "ਅਭਾਜ ਗੁਣਨਖੰਡ",
+        stat4: "ਗੁਣਨਖੰਡਾਂ ਦਾ ਜੋੜ"
+    },
+    jv: { 
+        title: "Kalkulator Kabeh Faktor", 
+        subtitle: "Temokake kabeh pembagi lan pasangan faktor saka nomer apa wae",
+        placeholder: "Mlebu integer > 0", 
+        btn: "Etung", 
+        clear: "Mbusak",
+        invalid: "Mangga ketik angka sing luwih gedhe tinimbang 0.", 
+        res: "Kabeh Faktor",
+        allFactorsTitle: "Kabeh Pembagi (★ nuduhake faktor prima)",
+        pairsTitle: "Pasangan Faktor",
+        language: "Basa",
+        inputLabel: "Ketik nomer",
+        emptyMsg: "Ketik nomer positif lan klik Etung",
+        stat1: "Nomer Input",
+        stat2: "Total Faktor",
+        stat3: "Faktor Prima",
+        stat4: "Jumlah Faktor"
+    },
+    ms: { 
+        title: "Kalkulator Semua Faktor", 
+        subtitle: "Cari semua pembahagi dan pasangan faktor mana-mana nombor",
+        placeholder: "Masukkan integer > 0", 
+        btn: "Kira", 
+        clear: "Padam",
+        invalid: "Sila masukkan nombor bulat yang lebih besar daripada 0.", 
+        res: "Semua Faktor",
+        allFactorsTitle: "Semua Pembahagi (★ menunjukkan faktor perdana)",
+        pairsTitle: "Pasangan Faktor",
+        language: "Bahasa",
+        inputLabel: "Masukkan nombor",
+        emptyMsg: "Masukkan nombor positif dan klik Kira",
+        stat1: "Nombor Input",
+        stat2: "Jumlah Faktor",
+        stat3: "Faktor Perdana",
+        stat4: "Hasil Tambah Faktor"
+    },
+    vi: { 
+        title: "Máy Tính Tất Cả Ước Số", 
+        subtitle: "Tìm tất cả các ước số và cặp thừa số của bất kỳ số nào",
+        placeholder: "Nhập số nguyên > 0", 
+        btn: "Tính toán", 
+        clear: "Xóa",
+        invalid: "Vui lòng nhập một số nguyên lớn hơn 0.", 
+        res: "Tất cả ước số",
+        allFactorsTitle: "Tất cả ước số (★ chỉ ra thừa số nguyên tố)",
+        pairsTitle: "Cặp thừa số",
+        language: "Ngôn ngữ",
+        inputLabel: "Nhập một số",
+        emptyMsg: "Nhập một số dương và nhấp vào Tính toán",
+        stat1: "Số đầu vào",
+        stat2: "Tổng số ước số",
+        stat3: "Thừa số nguyên tố",
+        stat4: "Tổng các ước số"
+    },
+    th: { 
+        title: "เครื่องคำนวณตัวประกอบทั้งหมด", 
+        subtitle: "ค้นหาตัวหารและคู่ตัวประกอบทั้งหมดของจำนวนใดก็ได้",
+        placeholder: "ใส่จำนวนเต็ม > 0", 
+        btn: "คำนวณ", 
+        clear: "ล้างค่า",
+        invalid: "กรุณาใส่จำนวนเต็มที่มากกว่า 0", 
+        res: "ตัวประกอบทั้งหมด",
+        allFactorsTitle: "ตัวหารทั้งหมด (★ แสดงถึงตัวประกอบเฉพาะ)",
+        pairsTitle: "คู่ตัวประกอบ",
+        language: "ภาษา",
+        inputLabel: "ป้อนตัวเลข",
+        emptyMsg: "ป้อนจำนวนบวกแล้วคลิก คำนวณ",
+        stat1: "ตัวเลขที่ป้อน",
+        stat2: "จำนวนตัวประกอบทั้งหมด",
+        stat3: "ตัวประกอบเฉพาะ",
+        stat4: "ผลรวมของตัวประกอบ"
+    },
+    fa: { 
+        title: "محاسبه‌گر تمام مقسوم‌علیه‌ها", 
+        subtitle: "تمام مقسوم‌علیه‌ها و جفت‌های فاکتور هر عددی را پیدا کنید",
+        placeholder: "یک عدد صحیح بزرگتر از 0 وارد کنید", 
+        btn: "محاسبه", 
+        clear: "پاک کردن",
+        invalid: "لطفاً یک عدد صحیح بزرگتر از 0 وارد کنید.", 
+        res: "تمام فاکتورها",
+        allFactorsTitle: "تمام مقسوم‌علیه‌ها (★ نشان‌دهنده فاکتور اول است)",
+        pairsTitle: "جفت‌های فاکتور",
+        language: "زبان",
+        inputLabel: "یک عدد وارد کنید",
+        emptyMsg: "یک عدد مثبت وارد کرده و روی محاسبه کلیک کنید",
+        stat1: "عدد ورودی",
+        stat2: "تعداد کل فاکتورها",
+        stat3: "فاکتورهای اول",
+        stat4: "مجموع فاکتورها"
+    },
+    ro: { 
+        title: "Calculator pentru Toți Factorii", 
+        subtitle: "Găsește全員 divizorii și perechile de factori ai oricărui număr",
+        placeholder: "Introduceți un număr întreg > 0", 
+        btn: "Calculează", 
+        clear: "Șterge",
+        invalid: "Vă rugăm să introduceți un număr întreg mai mare decât 0.", 
+        res: "Toți Factorii",
+        allFactorsTitle: "Toți Divizorii (★ indică un factor prim)",
+        pairsTitle: "Perechi de Factori",
+        language: "Limbă",
+        inputLabel: "Introduceți un număr",
+        emptyMsg: "Introduceți un număr pozitiv și faceți clic pe Calculează",
+        stat1: "Număr de intrare",
+        stat2: "Total factori",
+        stat3: "Factori primi",
+        stat4: "Suma factorilor"
+    },
+    hu: { 
+        title: "Összes Osztó Számológép", 
+        subtitle: "Keresse meg bármely szám összes osztóját és tényezőpárját",
+        placeholder: "Adjon meg egy 0-nál nagyobb egész számot", 
+        btn: "Számítás", 
+        clear: "Törlés",
+        invalid: "Kérjük, adjon meg egy 0-nál nagyobb egész számot.", 
+        res: "Összes Osztó",
+        allFactorsTitle: "Összes Osztó (a ★ prímtényezőt jelöl)",
+        pairsTitle: "Tényezőpárok",
+        language: "Nyelv",
+        inputLabel: "Adjon meg egy számot",
+        emptyMsg: "Adjon meg egy pozitív számot és kattintson a Számítás gombra",
+        stat1: "Bemeneti szám",
+        stat2: "Osztók száma",
+        stat3: "Prímtényezők",
+        stat4: "Osztók összege"
+    },
+    cs: { 
+        title: "Kalkulačka Všech Dělitelů", 
+        subtitle: "Najděte všechny dělitele a páry faktorů libovolného čísla",
+        placeholder: "Zadejte celé číslo > 0", 
+        btn: "Spočítat", 
+        clear: "Vymazat",
+        invalid: "Zadejte prosím celé číslo větší než 0.", 
+        res: "Všichni Dělitelé",
+        allFactorsTitle: "Všichni Dělitelé (★ označuje prvočíslo)",
+        pairsTitle: "Dvojice Faktorů",
+        language: "Jazyk",
+        inputLabel: "Zadejte číslo",
+        emptyMsg: "Zadejte kladné číslo a klikněte na Spočítat",
+        stat1: "Vstupní číslo",
+        stat2: "Celkem dělitelů",
+        stat3: "Prvočíselné faktory",
+        stat4: "Součet dělitelů"
+    },
+    sk: { 
+        title: "Kalkulačka Všetkých Deliteľov", 
+        subtitle: "Nájdite všetky delitele a páry faktorov ľubovoľného čísla",
+        placeholder: "Zadajte celé číslo > 0", 
+        btn: "Spočítať", 
+        clear: "Vymazať",
+        invalid: "Zadajte prosím celé číslo väčšie ako 0.", 
+        res: "Všetky Delitele",
+        allFactorsTitle: "Všetky Delitele (★ označuje prvočíslo)",
+        pairsTitle: "Dvojice Faktorov",
+        language: "Jazyk",
+        inputLabel: "Zadajte číslo",
+        emptyMsg: "Zadajte kladné číslo a kliknite na Spočítať",
+        stat1: "Vstupné číslo",
+        stat2: "Celkovo deliteľov",
+        stat3: "Prvočíselné faktory",
+        stat4: "Súčet deliteľov"
+    },
+    bg: { 
+        title: "Калкулатор на Всички Делители", 
+        subtitle: "Намерете всички делители и двойки множители на всяко число",
+        placeholder: "Въведете цяло число > 0", 
+        btn: "Изчисли", 
+        clear: "Изчисти",
+        invalid: "Моля, въведете цяло число, по-голямо от 0.", 
+        res: "Всички Делители",
+        allFactorsTitle: "Всички Делители (★ показва прост множител)",
+        pairsTitle: "Двойки Множители",
+        language: "Език",
+        inputLabel: "Въведете число",
+        emptyMsg: "Въведете положително число и натиснете Изчисли",
+        stat1: "Въведено число",
+        stat2: "Общо делители",
+        stat3: "Прости множители",
+        stat4: "Сума на делителите"
+    },
+    sr: { 
+        title: "Калкулатор Свих Делилаца", 
+        subtitle: "Пронађите све делиоце и парове чинилаца било ког броја",
+        placeholder: "Унесите цео број > 0", 
+        btn: "Израчунај", 
+        clear: "Очисти",
+        invalid: "Молимо унесите цео број већи од 0.", 
+        res: "Сви Делиоци",
+        allFactorsTitle: "Сви Делиоци (★ означава прост чинилац)",
+        pairsTitle: "Парови Чинилаца",
+        language: "Језик",
+        inputLabel: "Унесите број",
+        emptyMsg: "Унесите позитиван број и кликните на Израчунај",
+        stat1: "Улазни број",
+        stat2: "Укупно делилаца",
+        stat3: "Прости чиниоци",
+        stat4: "Збир делилаца"
+    },
+    hr: { 
+        title: "Kalkulator Svih Djelitelja", 
+        subtitle: "Pronađite sve djelitelje i parove faktora bilo kojeg broja",
+        placeholder: "Unesite cijeli broj > 0", 
+        btn: "Izračunaj", 
+        clear: "Očisti",
+        invalid: "Unesite cijeli broj veći od 0.", 
+        res: "Svi Djelitelji",
+        allFactorsTitle: "Svi Djelitelji (★ označava prosti faktor)",
+        pairsTitle: "Parovi Faktora",
+        language: "Jezik",
+        inputLabel: "Unesite broj",
+        emptyMsg: "Unesite pozitivan broj i kliknite Izračunaj",
+        stat1: "Ulazni broj",
+        stat2: "Ukupno djelitelja",
+        stat3: "Prosti faktori",
+        stat4: "Zbroj djelitelja"
+    },
+    sv: { 
+        title: "Räknare för Alla Faktorer", 
+        subtitle: "Hitta alla delare och faktorpar för vilket tal som helst",
+        placeholder: "Ange ett heltal > 0", 
+        btn: "Beräkna", 
+        clear: "Rensa",
+        invalid: "Ange ett heltal större än 0.", 
+        res: "Alla Faktorer",
+        allFactorsTitle: "Alla Delare (★ indikerar primfaktor)",
+        pairsTitle: "Faktorpar",
+        language: "Språk",
+        inputLabel: "Ange ett tal",
+        emptyMsg: "Ange ett positivt tal och klicka på Beräkna",
+        stat1: "Inmatat tal",
+        stat2: "Totalt antal faktorer",
+        stat3: "Primfaktorer",
+        stat4: "Summa av faktorer"
+    },
+    da: { 
+        title: "Beregner af Alle Faktorer", 
+        subtitle: "Find alle divisorer og faktorpar for ethvert tal",
+        placeholder: "Indtast et heltal > 0", 
+        btn: "Beregn", 
+        clear: "Ryd",
+        invalid: "Indtast venligst et heltal større end 0.", 
+        res: "Alle Faktorer",
+        allFactorsTitle: "Alle Divisorer (★ angiver primfaktor)",
+        pairsTitle: "Faktorpar",
+        language: "Sprog",
+        inputLabel: "Indtast et tal",
+        emptyMsg: "Indtast et positivt tal og klik på Beregn",
+        stat1: "Inputtal",
+        stat2: "Samlede faktorer",
+        stat3: "Primfaktorer",
+        stat4: "Sum af faktorer"
+    },
+    fi: { 
+        title: "Kaikkien Tekijöiden Laskin", 
+        subtitle: "Etsi minkä tahansa luvun kaikki jakajat ja tekijäparit",
+        placeholder: "Syötä kokonaisluku > 0", 
+        btn: "Laske", 
+        clear: "Tyhjennä",
+        invalid: "Syötä kokonaisluku, joka on suurempi kuin 0.", 
+        res: "Kaikki Tekijät",
+        allFactorsTitle: "Kaikki Jakajat (★ tarkoittaa alkutekijää)",
+        pairsTitle: "Tekijäparit",
+        language: "Kieli",
+        inputLabel: "Syötä luku",
+        emptyMsg: "Syötä positiivinen luku ja napsauta Laske",
+        stat1: "Syötetty luku",
+        stat2: "Tekijöitä yhteensä",
+        stat3: "Alkutekijät",
+        stat4: "Tekijöiden summa"
+    },
+    no: { 
+        title: "Kalkulator for Alle Faktorer", 
+        subtitle: "Finn alle divisorer og faktorpar for ethvert tall",
+        placeholder: "Skriv inn et heltall > 0", 
+        btn: "Beregne", 
+        clear: "Tøm",
+        invalid: "Vennligst skriv inn et heltall Større enn 0.", 
+        res: "Alle Faktorer",
+        allFactorsTitle: "Alle Divisorer (★ indikerer primfaktor)",
+        pairsTitle: "Faktorpar",
+        language: "Språk",
+        inputLabel: "Skriv inn et tall",
+        emptyMsg: "Skriv inn et positivt tall og klikk på Beregne",
+        stat1: "Inntastet tall",
+        stat2: "Totalt antall faktorer",
+        stat3: "Primfaktorer",
+        stat4: "Sum av faktorer"
+    },
+    he: { 
+        title: "מחשבון כל המחלקים", 
+        subtitle: "מצא את כל המחלקים וזוגות הגורמים של כל מספר",
+        placeholder: "הכנס מספר שלם > 0", 
+        btn: "חשב", 
+        clear: "נקה",
+        invalid: "אנא הזן מספר שלם הגדול מ-0.", 
+        res: "כל הגורמים",
+        allFactorsTitle: "כל המחלקים (★ מציין גורם ראשוני)",
+        pairsTitle: "זוגות גורמים",
+        language: "שפה",
+        inputLabel: "הזן מספר",
+        emptyMsg: "הזן מספר חיובי ולחץ על לחשב",
+        stat1: "מספר קלט",
+        stat2: "סך הכל גורמים",
+        stat3: "גורמים ראשוניים",
+        stat4: "סכום הגורמים"
+    },
+    id: { 
+        title: "Kalkulator Semua Faktor", 
+        subtitle: "Temukan semua pembagi dan pasangan faktor dari angka apa pun",
+        placeholder: "Masukkan bilangan bulat > 0", 
+        btn: "Hitung", 
+        clear: "Bersihkan",
+        invalid: "Harap masukkan bilangan bulat yang lebih besar dari 0.", 
+        res: "Semua Faktor",
+        allFactorsTitle: "Semua Pembagi (★ menunjukkan faktor prima)",
+        pairsTitle: "Pasangan Faktor",
+        language: "Bahasa",
+        inputLabel: "Masukkan angka",
+        emptyMsg: "Masukkan angka positif dan klik Hitung",
+        stat1: "Angka Input",
+        stat2: "Total Faktor",
+        stat3: "Faktor Prima",
+        stat4: "Jumlah Faktor"
+    },
+    fil: { 
+        title: "Kalkulator ng Lahat ng Salik", 
+        subtitle: "Hanapin ang lahat ng divisor at pares ng salik ng anumang numero",
+        placeholder: "Magpasok ng integer > 0", 
+        btn: "Kalkulahin", 
+        clear: "I-clear",
+        invalid: "Mangyaring magpasok ng integer na mas malaki sa 0.", 
+        res: "Lahat ng Salik",
+        allFactorsTitle: "Lahat ng Divisor (★ ay nagระบุ ng prime factor)",
+        pairsTitle: "Mga Pares ng Salik",
+        language: "Wika",
+        inputLabel: "Magpasok ng numero",
+        emptyMsg: "Magpasok ng positibong numero at i-click ang Kalkulahin",
+        stat1: "Input na Numero",
+        stat2: "Kabuuan ng mga Salik",
+        stat3: "Prime Factors",
+        stat4: "Kabuuan ng mga Salik (Sum)"
+    },
+    sw: { 
+        title: "Kikokotoo cha Mambo Yote", 
+        subtitle: "Pata vigawanye vyote na jozi za mambo za nambari yoyote",
+        placeholder: "Ingiza nambari kamili > 0", 
+        btn: "Kokotoa", 
+        clear: "Futa",
+        invalid: "Tafadhali ingiza nambari kamili kubwa kuliko 0.", 
+        res: "Mambo Yote",
+        allFactorsTitle: "Vigawanye Vyote (★ inaonyesha kipengele kikuu)",
+        pairsTitle: "Jozi za Mambo",
+        language: "Lugha",
+        inputLabel: "Ingiza nambari",
+        emptyMsg: "Ingiza nambari chanya na ubonyeze Kokotoa",
+        stat1: "Nambari ya Kuingiza",
+        stat2: "Jumla ya Mambo",
+        stat3: "Mambo Makuu",
+        stat4: "Jumla ya Mambo Yote"
+    },
+    ur: { 
+        title: "تمام اجزائے ضربی کیلکولیٹر", 
+        subtitle: "کسی بھی عدد کے تمام مقسوم علیہ اور جوڑے تلاش کریں",
+        placeholder: "0 سے بڑا عدد درج کریں", 
+        btn: "حساب لگائیں", 
+        clear: "صاف کریں",
+        invalid: "براہ کرم 0 سے بڑا پورا عدد درج کریں۔", 
+        res: "تمام عوامل",
+        allFactorsTitle: "تمام مقسوم علیہ (★ مفرد جزو ضربی کی نشاندہی کرتا ہے)",
+        pairsTitle: "عوامل کے جوڑے",
+        language: "زبان",
+        inputLabel: "ایک عدد درج کریں",
+        emptyMsg: "ایک مثبت عدد درج کریں اور حساب لگائیں پر کلک کریں",
+        stat1: "انپٹ نمبر",
+        stat2: "کل عوامل",
+        stat3: "مفرد عوامل",
+        stat4: "عوامل کا مجموعہ"
+    },
+    te: { 
+        title: "అన్ని కారణాంకాల క్యాలిక్యులేటర్", 
+        subtitle: "ఏదైనా సంఖ్య యొక్క అన్ని విభాజకాలు మరియు కారణాంక జతలను కనుగొనండి",
+        placeholder: "0 కంటే పెద్ద పూర్ణాంకాన్ని నమోదు చేయండి", 
+        btn: "లెక్కించు", 
+        clear: "స్పష్టంచేయి",
+        invalid: "దయచేసి 0 కంటే పెద్ద పూర్ణాంకాన్ని నమోదు చేయండి.", 
+        res: "అన్ని కారణాంకాలు",
+        allFactorsTitle: "అన్ని విభాజకాలు (★ ప్రధాన కారణాంకాన్ని సూచిస్తుంది)",
+        pairsTitle: "కారణాంక జతలు",
+        language: "భాష",
+        inputLabel: "ఒక సంఖ్యను నమోదు చేయండి",
+        emptyMsg: "ధనాత్మక సంఖ్యను నమోదు చేసి, లెక్కించు పై క్లిక్ చేయండి",
+        stat1: "ఇన్‌పుట్ సంఖ్య",
+        stat2: "మొత్తం కారణాంకాలు",
+        stat3: "ప్రధాన కారణాంకాలు",
+        stat4: "కారణాంకాల మొత్తము"
+    },
+    mr: { 
+        title: "सर्व अवयव कॅल्क्युलेटर", 
+        subtitle: "कोणत्याही संख्येचे सर्व विभाजक आणि अवयवांच्या जोड्या शोधा",
+        placeholder: "0 पेक्षा मोठा पूर्णांक प्रविष्ट करा", 
+        btn: "गणना करा", 
+        clear: "साफ करा",
+        invalid: "कृपया 0 पेक्षा मोठा पूर्णांक प्रविष्ट करा.", 
+        res: "सर्व अवयव",
+        allFactorsTitle: "सर्व विभाजक (★ मूल अवयव दर्शवते)",
+        pairsTitle: "अवयवांच्या जोड्या",
+        language: "भाषा",
+        inputLabel: "संख्या प्रविष्ट करा",
+        emptyMsg: "धन संख्या प्रविष्ट करा आणि गणना करा वर क्लिक करा",
+        stat1: "इनपुट संख्या",
+        stat2: "एकूण अवयव",
+        stat3: "मूल अवयव",
+        stat4: "अवयवांची बेरीज"
+    },
+    ta: { 
+        title: "அனைத்து காரணிகள் கணிப்பான்", 
+        subtitle: "எந்த எண்ணின் அனைத்து வகுத்திகளையும் காரணி ஜோடிகளையும் கண்டறியவும்",
+        placeholder: "0 ஐ விட பெரிய முழு எண்ணை உள்ளிடவும்", 
+        btn: "கணக்கிடு", 
+        clear: "அழி",
+        invalid: "தயவுசெய்து 0 ஐ விட பெரிய முழு எண்ணை உள்ளிடவும்.", 
+        res: "அனைத்து காரணிகள்",
+        allFactorsTitle: "அனைத்து வகுத்திகள் (★ பகா காரணியைக் குறிக்கிறது)",
+        pairsTitle: "காரணி ஜோடிகள்",
+        language: "மொழி",
+        inputLabel: "ஒரு எண்ணை உள்ளிடவும்",
+        emptyMsg: "நேர்மறை எண்ணை உள்ளிட்டு கணக்கிடு என்பதைக் கிளிக் செய்யவும்",
+        stat1: "உள்ளீடு எண்",
+        stat2: "மொத்த காரணிகள்",
+        stat3: "பகா காரணிகள்",
+        stat4: "காரணிகளின் கூடுதல்"
+    },
+    gu: { 
+        title: "તમામ અવયવ કેલ્ક્યુલેટર", 
+        subtitle: "કોઈપણ સંખ્યાના તમામ ભાજકો અને અવયવ જોડી શોધો",
+        placeholder: "0 કરતાં મોટો પૂર્ણાંક દાખલ કરો", 
+        btn: "ગણતરી કરો", 
+        clear: "સાફ કરો",
+        invalid: "કૃપા કરીને 0 કરતાં મોટો પૂર્ણાંક દાખલ કરો.", 
+        res: "તમામ અવયવો",
+        allFactorsTitle: "તમામ ભાજકો (★ અવિભાજ્ય અવયવ દર્શાવે છે)",
+        pairsTitle: "અવયવ જોડીઓ",
+        language: "ભાષા",
+        inputLabel: "એક સંખ્યા દાખલ કરો",
+        emptyMsg: "ધન સંખ્યા દાખલ કરો અને ગણતરી કરો પર ક્લિક કરો",
+        stat1: "ઇનપુટ સંખ્યા",
+        stat2: "કુલ અવયવો",
+        stat3: "અવિભાજ્ય અવયવો",
+        stat4: "અવયવોનો સરવાળો"
+    },
+    kn: { 
+        title: "ಎಲ್ಲಾ ಅಪವರ್ತನಗಳ ಕ್ಯಾಲ್ಕುಲೇಟರ್", 
+        subtitle: "ಯಾವುದೇ ಸಂಖ್ಯೆಯ ಎಲ್ಲಾ ಭಾಜಕಗಳು ಮತ್ತು ಅಪವರ್ತನ ಜೋಡಿಗಳನ್ನು കണ്ടುಹಿಡಿಯಿರಿ",
+        placeholder: "0 ಕ್ಕಿಂತ ದೊಡ್ಡ ಪೂರ್ಣಾಂಕವನ್ನು ನಮೂದಿಸಿ", 
+        btn: "ಲೆಕ್ಕಾಚಾರ ಮಾಡಿ", 
+        clear: "ತೆರವುಗೊಳಿಸಿ",
+        invalid: "ದಯವಿಟ್ಟು 0 ಕ್ಕಿಂತ ದೊಡ್ಡ ಪೂರ್ಣಾಂಕವನ್ನು ನಮೂದಿಸಿ.", 
+        res: "ಎಲ್ಲಾ ಅಪವರ್ತನಗಳು",
+        allFactorsTitle: "ಎಲ್ಲಾ ಭಾಜಕಗಳು (★ ಅವಿಭಾಜ್ಯ ಅಪವರ್ತನವನ್ನು ಸೂಚಿಸುತ್ತದೆ)",
+        pairsTitle: "ಅಪವರ್ತನ ಜೋಡಿಗಳು",
+        language: "ಭಾಷೆ",
+        inputLabel: "ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ",
+        emptyMsg: "ಧನಾತ್ಮಕ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ ಮತ್ತು ಲೆಕ್ಕಾಚಾರ ಮಾಡಿ క్ಲಿಕ್ ಮಾಡಿ",
+        stat1: "ಇನ್‌పుಟ್ ಸಂಖ್ಯೆ",
+        stat2: "ಒಟ್ಟು ಅಪವರ್ತನಗಳು",
+        stat3: "ಅವಿಭಾಜ್ಯ ಅಪವರ್ತನಗಳು",
+        stat4: "ಅಪವರ್ತನಗಳ ಮೊತ್ತ"
+    },
+    ml: { 
+        title: "എല്ലാ ഘടകങ്ങളുടെയും കാൽക്കുലേറ്റർ", 
+        subtitle: "ഏതൊരു സംഖ്യയുടെയും എല്ലാ ഘടകങ്ങളും ജോഡികളും കണ്ടെത്തുക",
+        placeholder: "0-നേക്കാൾ വലിയ ഒരു പൂർണ്ണസംഖ്യ നൽകുക", 
+        btn: "കണക്കാക്കുക", 
+        clear: "വ്യക്തമാക്കുക",
+        invalid: "ദയവായി 0-നേക്കാൾ വലിയ ഒരു പൂർണ്ണസംഖ്യ നൽകുക.", 
+        res: "എല്ലാ ഘടകങ്ങളും",
+        allFactorsTitle: "എല്ലാ ഘടകങ്ങളും (★ അവിഭാജ്യ ഘടകത്തെ സൂചിപ്പിക്കുന്നു)",
+        pairsTitle: "ഘടക ജോഡികൾ",
+        language: "ഭാഷ",
+        inputLabel: "ഒരു സംഖ്യ നൽകുക",
+        emptyMsg: "ഒരു പോസിറ്റീവ് സംഖ്യ നൽകി കണക്കാക്കുക ക്ലിക്ക് ചെയ്യുക",
+        stat1: "ഇൻപുട്ട് സംഖ്യ",
+        stat2: "ആകെ ഘടകങ്ങൾ",
+        stat3: "അവിഭാജ്യ ഘടകങ്ങൾ",
+        stat4: "ഘടകങ്ങളുടെ തുക"
+    },
+    eu: { 
+        title: "Faktore Guztien Kalkulagailua", 
+        subtitle: "Aurkitu edozein zenbakiren zatitzaile eta faktore-bikote guztiak",
+        placeholder: "Sartu 0 baino handiagoa den zenbaki oso bat", 
+        btn: "Kalkulatu", 
+        clear: "Garbitu",
+        invalid: "Mesedez, sartu 0 baino handiagoa den zenbaki oso bat.", 
+        res: "Faktore Guztiak",
+        allFactorsTitle: "Zatitzaile Guztiak (★-k faktore lehena adierazten du)",
+        pairsTitle: "Faktore Bikoteak",
+        language: "Hizkuntza",
+        inputLabel: "Sartu zenbaki bat",
+        emptyMsg: "Sartu zenbaki positibo bat eta sakatu Kalkulatu",
+        stat1: "Sarrerako zenbakia",
+        stat2: "Faktoreak guztira",
+        stat3: "Faktore lehenak",
+        stat4: "Faktoreen batura"
+    }
+};
+
+let currentLang = 'en';
+
+function changeLanguage() {
+    currentLang = document.getElementById('langSelect').value;
+    updateLanguageUI();
+    calculate();
+}
+
+function updateLanguageUI() {
+    const langData = translations[currentLang];
+    document.getElementById('title').innerText = langData.title;
+    document.getElementById('subtitle').innerText = langData.subtitle;
+    document.getElementById('numInput').placeholder = langData.placeholder;
+    document.getElementById('btn').innerText = langData.btn;
+    document.getElementById('clearBtn').innerText = langData.clear;
+    document.getElementById('emptyMsg').innerText = langData.emptyMsg;
+    document.getElementById('stat1-label').innerText = langData.stat1;
+    document.getElementById('stat2-label').innerText = langData.stat2;
+    document.getElementById('stat3-label').innerText = langData.stat3;
+    document.getElementById('stat4-label').innerText = langData.stat4;
+    
+    if (document.getElementById('langLabel')) {
+        document.getElementById('langLabel').innerText = langData.language;
+    }
+    if (document.getElementById('inputLabel')) {
+        document.getElementById('inputLabel').innerText = langData.inputLabel;
+    }
+}
+
+function isPrime(n) {
+    if (n < 2) return false;
+    for (let i = 2; i <= Math.sqrt(n); i++) {
+        if (n % i === 0) return false;
+    }
+    return true;
+}
+
+function getAllFactors(n) {
+    const factors = [];
+    for (let i = 1; i <= Math.sqrt(n); i++) {
+        if (n % i === 0) {
+            factors.push(i);
+            if (i !== n / i) {
+                factors.push(n / i);
+            }
+        }
+    }
+    return factors.sort((a, b) => a - b);
+}
+
+function getFactorPairs(n) {
+    const pairs = [];
+    for (let i = 1; i <= Math.sqrt(n); i++) {
+        if (n % i === 0) {
+            pairs.push([i, n / i]);
+        }
+    }
+    return pairs;
+}
+
+function calculate() {
+    const num = parseInt(document.getElementById('numInput').value);
+    const langData = translations[currentLang];
+    const resultDiv = document.getElementById('resultText');
+    const displayContainer = document.getElementById('displayContainer');
+
+    if (isNaN(num) || num <= 0) {
+        resultDiv.innerText = langData.invalid;
+        resultDiv.classList.add('error');
+        resultDiv.classList.remove('hidden');
+        displayContainer.innerHTML = `<div class="empty-state">
+            <div class="empty-state-icon">⚠️</div>
+            <p>${langData.emptyMsg}</p>
+        </div>`;
+        clearStats();
+        return;
+    }
+
+    resultDiv.classList.remove('error');
+    const allFactors = getAllFactors(num);
+    const pairs = getFactorPairs(num);
+    const primeFactors = allFactors.filter(f => isPrime(f));
+    const factorSum = allFactors.reduce((a, b) => a + b, 0);
+
+    resultDiv.innerText = `${langData.res}: ${allFactors.join(", ")}`;
+    resultDiv.classList.remove('hidden');
+
+    // Build factor cards HTML
+    let factorsHTML = `<div class="grid-container">
+        <div>
+            <div class="section-title">📌 ${langData.allFactorsTitle}</div>
+            <div class="factors-grid">`;
+    
+    allFactors.forEach((factor, idx) => {
+        const isP = isPrime(factor);
+        const cardClass = isP ? "factor-card prime-factor" : "factor-card";
+        const delay = (idx * 0.05).toFixed(2);
+        factorsHTML += `<div class="${cardClass}" style="animation-delay: ${delay}s">${factor}</div>`;
+    });
+
+    factorsHTML += `</div></div><div>
+            <div class="section-title">🔗 ${langData.pairsTitle}</div>
+            <div class="pairs-grid">`;
+
+    pairs.forEach((pair, idx) => {
+        const delay = ((allFactors.length * 0.05) + (idx * 0.05)).toFixed(2);
+        factorsHTML += `<div class="pair-card" style="animation-delay: ${delay}s">
+            <span class="highlight">${pair[0]}</span> × <span class="highlight">${pair[1]}</span>
+        </div>`;
+    });
+
+    factorsHTML += `</div></div></div>`;
+
+    displayContainer.innerHTML = factorsHTML;
+
+    // Update stats
+    document.getElementById('stat1').innerText = num;
+    document.getElementById('stat2').innerText = allFactors.length;
+    document.getElementById('stat3').innerText = primeFactors.length;
+    document.getElementById('stat4').innerText = factorSum;
+}
+
+function clearCalculation() {
+    document.getElementById('numInput').value = '';
+    document.getElementById('resultText').classList.add('hidden');
+    document.getElementById('displayContainer').innerHTML = `<div class="empty-state">
+        <div class="empty-state-icon">🔢</div>
+        <p>${translations[currentLang].emptyMsg}</p>
+    </div>`;
+    clearStats();
+}
+
+function clearStats() {
+    document.getElementById('stat1').innerText = '—';
+    document.getElementById('stat2').innerText = '—';
+    document.getElementById('stat3').innerText = '—';
+    document.getElementById('stat4').innerText = '—';
+}
+
+// Initialize on page load
+updateLanguageUI();
+</script>
+
+</body>
+</html>
